@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Popup Window</title>
+</head>
+<body>
+    <h3>Popup Window</h3>
+    <p>This window communicates with parent</p>
+    
+    <script type="text/javascript">
+        // Multiple message listeners
+        window.addEventListener('message', handleParentMessage);
+        document.addEventListener('message', handleDocumentMessage);
+        
+        function handleParentMessage(event) {
+            // VULNERABLE: No origin validation
+            console.log('Popup received from parent:', event.data);
+            
+            // VULNERABLE: document.write usage
+            document.write(`<p>Message: ${event.data}</p>`);
+        }
+        
+        function handleDocumentMessage(event) {
+            // VULNERABLE: setTimeout with event data
+            setTimeout(event.data, 1000);
+        }
+        
+        // Window onmessage assignment
+        window.onmessage = function(e) {
+            // VULNERABLE: Function constructor
+            const fn = new Function(e.data);
+            fn();
+        };
+    </script>
+</body>
+</html>

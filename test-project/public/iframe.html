@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Child Frame</title>
+</head>
+<body>
+    <h3>Iframe Content</h3>
+    <div id="frame-messages"></div>
+    
+    <script>
+        // Iframe message listener
+        window.addEventListener('message', function(event) {
+            // VULNERABLE: Missing origin check
+            console.log('Iframe received:', event.data);
+            
+            // VULNERABLE: innerHTML injection
+            document.getElementById('frame-messages').innerHTML += 
+                `<div>From: ${event.origin} - ${event.data}</div>`;
+                
+            // Send response back
+            event.source.postMessage('Response from iframe', event.origin);
+        });
+        
+        // Send message to parent on load
+        window.onload = function() {
+            parent.postMessage('Iframe loaded', '*');
+        };
+    </script>
+</body>
+</html>

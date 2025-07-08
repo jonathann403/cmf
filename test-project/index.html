@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMF Test - Main Page</title>
+</head>
+<body>
+    <h1>CMF Security Test Application</h1>
+    <div id="messages"></div>
+    <div id="vulnerable-content"></div>
+    
+    <iframe id="child-frame" src="public/iframe.html" width="400" height="300"></iframe>
+    
+    <script>
+        // Basic message listener - potential XSS vulnerability
+        window.addEventListener('message', function(event) {
+            console.log('Received message from:', event.origin);
+            
+            // VULNERABLE: No origin validation
+            document.getElementById('vulnerable-content').innerHTML = event.data;
+        });
+        
+        // Alternative message handler
+        window.onmessage = function(event) {
+            // VULNERABLE: Direct eval of message data
+            if (event.data.startsWith('eval:')) {
+                eval(event.data.substring(5));
+            }
+        };
+        
+        // Send message to iframe
+        function sendToFrame() {
+            const frame = document.getElementById('child-frame');
+            frame.contentWindow.postMessage('Hello from parent', '*');
+        }
+        
+        // Document-level message listener
+        document.addEventListener('message', function(event) {
+            // VULNERABLE: DOM manipulation without validation
+            const msgDiv = document.createElement('div');
+            msgDiv.innerHTML = `<p>Document received: ${event.data}</p>`;
+            document.getElementById('messages').appendChild(msgDiv);
+        });
+    </script>
+    
+    <script src="src/messaging.js"></script>
+    <script src="src/vulnerable-handlers.js"></script>
+    
+    <button onclick="sendToFrame()">Send Message to Frame</button>
+</body>
+</html>
