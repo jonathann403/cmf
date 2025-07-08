@@ -1,3 +1,9 @@
+#vsc
+.vscode
+
+# Workflow
+CLAUDE.md
+sprints
 # Logs
 logs
 *.log
