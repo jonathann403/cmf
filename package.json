@@ -1,0 +1,26 @@
+{
+  "name": "cmf",
+  "version": "1.0.0",
+  "description": "Critical Message Flow (CMF) is a specialized static analysis tool that detects vulnerabilities in client-side JavaScript message event listeners in web applications. The tool focuses on postMessage API security, iframe communication vulnerabilities, cross-origin message attacks, and XSS through message handling.",
+  "homepage": "https://github.com/jonathann403/cmf#readme",
+  "bugs": {
+    "url": "https://github.com/jonathann403/cmf/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonathann403/cmf.git"
+  },
+  "license": "ISC",
+  "author": "Jonathan Levy & Neta Gorelik",
+  "type": "commonjs",
+  "main": "./src/cli/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.28.0",
+    "@babel/traverse": "^7.28.0",
+    "js-beautify": "^1.15.4",
+    "jsdom": "^26.1.0"
+  }
+}
