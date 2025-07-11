@@ -1,10 +1,14 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { JSDOM } = require('jsdom');
+const { ASTParser } = require('./astParser');
+const { MessageExtractor } = require('./messageExtractor');
 const { getFileType } = require('../utils/fileUtils');
 
 class FileProcessor {
     constructor() {
+        this.astParser = new ASTParser();
+        this.messageExtractor = new MessageExtractor(this.astParser);
         this.supportedTypes = {
             'html': this._processHtmlFile.bind(this),
             'javascript': this._processJsFile.bind(this),
@@ -93,10 +97,27 @@ class FileProcessor {
     }
     
     async _processJsFile(fileInfo) {
-        return {
-            ...fileInfo,
-            lines: fileInfo.content.split('\n').length
-        };
+        try {
+            const ast = this.astParser.parse(fileInfo.content);
+            const messageHandlers = this.messageExtractor.extractMessageHandlers(ast);
+
+            return {
+                ...fileInfo,
+                lines: fileInfo.content.split('\n').length,
+                ast: ast,
+                messageHandlers: messageHandlers
+            };
+            
+        } catch (error) {
+            console.warn(`Warning: Error parsing JavaScript file ${fileInfo.path}: ${error.message}`);
+            return {
+                ...fileInfo,
+                lines: fileInfo.content.split('\n').length,
+                ast: null,
+                messageHandlers: [],
+                parseError: error.message
+            };
+        }
     }
     
     getSupportedTypes() {
