@@ -4,6 +4,9 @@
 # Workflow
 CLAUDE.md
 sprints
+.claude
+report.js
+
 # Logs
 logs
 *.log
