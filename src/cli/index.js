@@ -8,11 +8,16 @@ const { FlowAnalyzer } = require('../core/flowAnalyzer');
 const { SecurityAuditor } = require('../core/securityAuditor');
 
 function printUsage() {
-    console.log('Usage: node src/cli/index.js <directory-path>');
+    console.log('Usage: node src/cli/index.js [options] <path>');
+    console.log('');
+    console.log('Options:');
+    console.log('  -f, --file    Analyze a single file instead of directory');
     console.log('');
     console.log('Examples:');
     console.log('  node src/cli/index.js ./test-project');
     console.log('  node src/cli/index.js /path/to/webapp');
+    console.log('  node src/cli/index.js --file ./test-project/messaging.js');
+    console.log('  node src/cli/index.js -f /path/to/file.js');
 }
 
 function printResults(results, securityReports) {
@@ -106,25 +111,66 @@ module.exports = report;
     }
 }
 
-async function main() {
-    const args = process.argv.slice(2);
+function parseArguments(args) {
+    let isFileMode = false;
+    let targetPath = '';
     
-    if (args.length === 0) {
-        console.error('Error: Please provide a directory path to scan');
-        printUsage();
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        
+        if (arg === '-f' || arg === '--file') {
+            isFileMode = true;
+        } else if (!targetPath) {
+            targetPath = arg;
+        }
+    }
+    
+    return { isFileMode, targetPath };
+}
+
+async function analyzeSingleFile(filePath) {
+    const absolutePath = path.resolve(filePath);
+    
+    if (!fs.existsSync(absolutePath)) {
+        console.error(`Error: File '${filePath}' does not exist`);
         process.exit(1);
     }
     
-    const targetDir = args[0];
-    const absolutePath = path.resolve(targetDir);
+    if (!fs.statSync(absolutePath).isFile()) {
+        console.error(`Error: '${filePath}' is not a file`);
+        process.exit(1);
+    }
+    
+    console.log(`Analyzing single file: ${absolutePath}`);
+    
+    try {
+        const fileProcessor = new FileProcessor();
+        const flowAnalyzer = new FlowAnalyzer();
+        const securityAuditor = new SecurityAuditor();
+        
+        const fileInfo = await fileProcessor.processFile(absolutePath);
+        const flowAnalysis = flowAnalyzer.analyzeFile(fileInfo);
+        const securityReport = securityAuditor.auditFlow(flowAnalysis, fileInfo.content);
+        
+        printResults([fileInfo], [securityReport]);
+        writeReport([fileInfo], [securityReport]);
+        
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
+        process.exit(1);
+    }
+}
+
+async function analyzeDirectory(dirPath) {
+    const absolutePath = path.resolve(dirPath);
     
     if (!fs.existsSync(absolutePath)) {
-        console.error(`Error: Directory '${targetDir}' does not exist`);
+        console.error(`Error: Directory '${dirPath}' does not exist`);
         process.exit(1);
     }
     
     if (!fs.statSync(absolutePath).isDirectory()) {
-        console.error(`Error: '${targetDir}' is not a directory`);
+        console.error(`Error: '${dirPath}' is not a directory`);
         process.exit(1);
     }
     
@@ -150,10 +196,7 @@ async function main() {
             const fileInfo = await fileProcessor.processFile(filePath);
             results.push(fileInfo);
             
-            // Analyze code flow
             const flowAnalysis = flowAnalyzer.analyzeFile(fileInfo);
-            
-            // Audit security vulnerabilities
             const securityReport = securityAuditor.auditFlow(flowAnalysis, fileInfo.content);
             securityReports.push(securityReport);
         }
@@ -164,6 +207,30 @@ async function main() {
     } catch (error) {
         console.error(`Error: ${error.message}`);
         process.exit(1);
+    }
+}
+
+async function main() {
+    const args = process.argv.slice(2);
+    
+    if (args.length === 0) {
+        console.error('Error: Please provide a path to analyze');
+        printUsage();
+        process.exit(1);
+    }
+    
+    const { isFileMode, targetPath } = parseArguments(args);
+    
+    if (!targetPath) {
+        console.error('Error: Please provide a path to analyze');
+        printUsage();
+        process.exit(1);
+    }
+    
+    if (isFileMode) {
+        await analyzeSingleFile(targetPath);
+    } else {
+        await analyzeDirectory(targetPath);
     }
 }
 
