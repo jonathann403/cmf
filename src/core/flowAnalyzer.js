@@ -17,31 +17,61 @@ class FlowAnalyzer {
         }
 
         const messageHandlers = this.messageExtractor.extractMessageHandlers(fileData.ast);
-        const evalCalls = this._detectEvalCalls(fileData.ast);
+        const enhancedHandlers = this._analyzeHandlers(messageHandlers, fileData.ast);
 
         return {
             filePath: fileData.path,
-            messageHandlers: messageHandlers,
-            evalCalls: evalCalls
+            messageHandlers: enhancedHandlers
         };
     }
 
-    _detectEvalCalls(ast) {
-        const evalCalls = [];
+    _analyzeHandlers(messageHandlers, fileAst) {
+        return messageHandlers.map(handler => {
+            this._logHandlerInfo(handler, fileAst);
+            return handler;
+        });
+    }
 
-        this.astParser.traverse(ast, {
-            CallExpression: (path) => {
-                const node = path.node;
-                
-                if (node.callee.type === 'Identifier' && node.callee.name === 'eval') {
-                    evalCalls.push({
-                        line: node.loc ? node.loc.start.line : 0
-                    });
+    _logHandlerInfo(handler, fileAst) {
+        if (!handler.handler) {
+            console.log(`Handler type: ${handler.type}, Function: undefined`);
+            return;
+        }
+
+        const handlerNode = handler.handler;
+        let functionType = handlerNode.type;
+        let parameters = [];
+
+        if (handlerNode.type === 'FunctionExpression' || handlerNode.type === 'ArrowFunctionExpression') {
+            parameters = handlerNode.params.map(param => param.name || param.type);
+        } else if (handlerNode.type === 'Identifier') {
+            functionType = 'ExternalFunction';
+            const externalFunctionParams = this._findExternalFunctionParams(handlerNode.name, fileAst);
+            parameters = externalFunctionParams.length > 0 ? externalFunctionParams : [handlerNode.name];
+        }
+
+        console.log(`Handler type: ${handler.type}, Function: ${functionType}, Parameters: ${parameters.join(', ')}`);
+    }
+
+    _findExternalFunctionParams(functionName, fileAst) {
+        let foundParams = [];
+
+        this.astParser.traverse(fileAst, {
+            FunctionDeclaration: (path) => {
+                if (path.node.id && path.node.id.name === functionName) {
+                    foundParams = path.node.params.map(param => param.name || param.type);
+                }
+            },
+            VariableDeclarator: (path) => {
+                if (path.node.id && path.node.id.name === functionName && 
+                    path.node.init && 
+                    (path.node.init.type === 'FunctionExpression' || path.node.init.type === 'ArrowFunctionExpression')) {
+                    foundParams = path.node.init.params.map(param => param.name || param.type);
                 }
             }
         });
 
-        return evalCalls;
+        return foundParams;
     }
 }
 
