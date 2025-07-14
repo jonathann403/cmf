@@ -25,7 +25,7 @@ function printResults(results, securityReports) {
     
     const fileTypes = {};
     let totalVulnerabilities = 0;
-    let totalMessageHandlers = 0;
+    let totalMessageListeners = 0;
     
     results.forEach((file, index) => {
         const ext = path.extname(file.path);
@@ -33,15 +33,15 @@ function printResults(results, securityReports) {
         
         const securityReport = securityReports[index];
         const vulnCount = securityReport.vulnerabilities.length;
-        const handlerCount = securityReport.messageHandlers.length;
+        const listenerCount = securityReport.messageListeners.length;
         
         totalVulnerabilities += vulnCount;
-        totalMessageHandlers += handlerCount;
+        totalMessageListeners += listenerCount;
         
         const vulnIndicator = vulnCount > 0 ? `⚠️  ${vulnCount} vulnerabilities` : '✅ no vulnerabilities';
-        const handlerIndicator = handlerCount > 0 ? `📨 ${handlerCount} handlers` : '';
+        const listenerIndicator = listenerCount > 0 ? `📨 ${listenerCount} listeners` : '';
         
-        console.log(`${file.type.padEnd(8)} ${file.path} ${vulnIndicator} ${handlerIndicator}`);
+        console.log(`${file.type.padEnd(8)} ${file.path} ${vulnIndicator} ${listenerIndicator}`);
     });
     
     console.log('\nFile type summary:');
@@ -50,7 +50,7 @@ function printResults(results, securityReports) {
     });
     
     console.log(`\nSecurity Analysis Summary:`);
-    console.log(`  Total message handlers found: ${totalMessageHandlers}`);
+    console.log(`  Total message listeners found: ${totalMessageListeners}`);
     console.log(`  Total vulnerabilities found: ${totalVulnerabilities}`);
     
     if (totalVulnerabilities > 0) {
@@ -77,15 +77,15 @@ function writeReport(results, securityReports) {
         timestamp: new Date().toISOString(),
         summary: {
             totalFiles: results.length,
-            totalMessageHandlers: securityReports.reduce((sum, report) => sum + (report.messageHandlers.length || 0), 0),
+            totalMessageListeners: securityReports.reduce((sum, report) => sum + (report.messageListeners.length || 0), 0),
             totalVulnerabilities: securityReports.reduce((sum, report) => sum + report.vulnerabilities.length, 0)
         },
         files: securityReports.map(report => ({
             filePath: report.filePath,
-            messageHandlers: report.messageHandlers.map(handler => ({
-                type: handler.type,
-                line: handler.line,
-                target: handler.target
+            messageListeners: report.messageListeners.map(listener => ({
+                type: listener.type,
+                line: listener.line,
+                target: listener.target
             })),
             vulnerabilities: report.vulnerabilities.map(vuln => ({
                 type: vuln.type,

@@ -16,7 +16,7 @@ class SecurityAuditor {
         return {
             filePath: flowAnalysisData.filePath,
             vulnerabilities: vulnerabilities,
-            messageHandlers: flowAnalysisData.messageHandlers || []
+            messageListeners: flowAnalysisData.messageListeners || []
         };
     }
 

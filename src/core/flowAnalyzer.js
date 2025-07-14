@@ -11,49 +11,49 @@ class FlowAnalyzer {
         if (!fileData.ast) {
             return {
                 filePath: fileData.path,
-                messageHandlers: [],
+                messageListeners: [],
                 evalCalls: []
             };
         }
 
-        const messageHandlers = this.messageExtractor.extractMessageHandlers(fileData.ast);
-        const enhancedHandlers = this._analyzeHandlers(messageHandlers, fileData.ast);
+        const messageListeners = this.messageExtractor.extractMessageListeners(fileData.ast);
+        const enhancedListeners = this._analyzeListeners(messageListeners, fileData.ast);
 
         return {
             filePath: fileData.path,
-            messageHandlers: enhancedHandlers
+            messageListeners: enhancedListeners
         };
     }
 
-    _analyzeHandlers(messageHandlers, fileAst) {
-        return messageHandlers.map(handler => {
-            this._logHandlerInfo(handler, fileAst);
-            return handler;
+    _analyzeListeners(messageListeners, fileAst) {
+        return messageListeners.map(listener => {
+            this._logListenerInfo(listener, fileAst);
+            return listener;
         });
     }
 
-    _logHandlerInfo(handler, fileAst) {
-        if (!handler.handler) {
-            console.log(`Handler type: ${handler.type}, Function: undefined`);
+    _logListenerInfo(listener, fileAst) {
+        if (!listener.handler) {
+            console.log(`Listener type: ${listener.type}, Handler: undefined`);
             return;
         }
 
-        const handlerNode = handler.handler;
-        let functionType = handlerNode.type;
+        const handlerNode = listener.handler;
+        let handlerType = handlerNode.type;
         let parameters = [];
 
         if (handlerNode.type === 'FunctionExpression' || handlerNode.type === 'ArrowFunctionExpression') {
             parameters = handlerNode.params.map(param => param.name || param.type);
         } else if (handlerNode.type === 'Identifier') {
-            functionType = 'ExternalFunction';
-            const externalFunctionParams = this._findExternalFunctionParams(handlerNode.name, fileAst);
+            handlerType = 'ExternalFunction';
+            const externalFunctionParams = this._findExternalHandlerParams(handlerNode.name, fileAst);
             parameters = externalFunctionParams.length > 0 ? externalFunctionParams : [handlerNode.name];
         }
 
-        console.log(`Handler type: ${handler.type}, Function: ${functionType}, Parameters: ${parameters.join(', ')}`);
+        console.log(`Listener type: ${listener.type}, Handler: ${handlerType}, Parameters: ${parameters.join(', ')}`);
     }
 
-    _findExternalFunctionParams(functionName, fileAst) {
+    _findExternalHandlerParams(functionName, fileAst) {
         let foundParams = [];
 
         this.astParser.traverse(fileAst, {

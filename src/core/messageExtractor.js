@@ -3,24 +3,24 @@ class MessageExtractor {
         this.astParser = astParser;
     }
 
-    extractMessageHandlers(ast) {
-        const messageHandlers = [];
+    extractMessageListeners(ast) {
+        const messageListeners = [];
         
         this.astParser.traverse(ast, {
             CallExpression: (path) => {
-                const handler = this._extractEventListenerHandler(path.node);
-                if (handler) { messageHandlers.push(handler); }
+                const listener = this._extractEventListener(path.node);
+                if (listener) { messageListeners.push(listener); }
             },
             AssignmentExpression: (path) => {
-                const handler = this._extractOnMessageHandler(path.node);
-                if (handler) { messageHandlers.push(handler); }
+                const listener = this._extractOnMessageListener(path.node);
+                if (listener) { messageListeners.push(listener); }
             }
         });
         
-        return messageHandlers;
+        return messageListeners;
     }
 
-    _extractEventListenerHandler(node) {
+    _extractEventListener(node) {
         if (this._isWindowMessageListener(node)) {
             return {
                 type: 'addEventListener',
@@ -32,7 +32,7 @@ class MessageExtractor {
         return null;
     }
 
-    _extractOnMessageHandler(node) {
+    _extractOnMessageListener(node) {
         if (this._isWindowOnMessage(node)) {
             return {
                 type: 'onmessage',

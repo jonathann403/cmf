@@ -99,13 +99,13 @@ class FileProcessor {
     async _processJsFile(fileInfo) {
         try {
             const ast = this.astParser.parse(fileInfo.content);
-            const messageHandlers = this.messageExtractor.extractMessageHandlers(ast);
+            const messageListeners = this.messageExtractor.extractMessageListeners(ast);
 
             return {
                 ...fileInfo,
                 lines: fileInfo.content.split('\n').length,
                 ast: ast,
-                messageHandlers: messageHandlers
+                messageListeners: messageListeners
             };
             
         } catch (error) {
@@ -114,7 +114,7 @@ class FileProcessor {
                 ...fileInfo,
                 lines: fileInfo.content.split('\n').length,
                 ast: null,
-                messageHandlers: [],
+                messageListeners: [],
                 parseError: error.message
             };
         }
