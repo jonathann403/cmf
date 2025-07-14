@@ -2,27 +2,6 @@
 
 This is a comprehensive test project for the CMF (Critical Message Flow) security analysis tool. It contains various web application files with different message listener patterns, including both vulnerable and secure implementations.
 
-## Directory Structure
-
-```
-test-project/
-├── index.html                    # Main HTML page with message listeners
-├── public/
-│   ├── iframe.html              # Iframe with message communication
-│   └── popup.html               # Popup window with message handlers
-├── src/
-│   ├── messaging.js             # Various message listener patterns
-│   ├── vulnerable-handlers.js   # Collection of vulnerable handlers
-│   └── secure-handlers.js       # Examples of secure implementations
-├── components/
-│   ├── MessageComponent.tsx     # React TypeScript component
-│   └── VueComponent.js          # Vue.js component patterns
-├── utils/
-│   └── communication.ts         # TypeScript communication utilities
-└── workers/
-    └── message-worker.js        # Web Worker with message handling
-```
-
 ## Vulnerability Patterns Included
 
 ### 1. Basic Message Listeners
