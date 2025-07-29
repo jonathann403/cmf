@@ -45,12 +45,52 @@ class FlowAnalyzer {
         if (handlerNode.type === 'FunctionExpression' || handlerNode.type === 'ArrowFunctionExpression') {
             parameters = handlerNode.params.map(param => param.name || param.type);
         } else if (handlerNode.type === 'Identifier') {
-            handlerType = 'ExternalFunction';
+            handlerType = handlerNode.name;
             const externalFunctionParams = this._findExternalHandlerParams(handlerNode.name, fileAst);
-            parameters = externalFunctionParams.length > 0 ? externalFunctionParams : [handlerNode.name];
+            parameters = externalFunctionParams.length > 0 ? externalFunctionParams : ['unknown'];
         }
 
         console.log(`Listener type: ${listener.type}, Handler: ${handlerType}, Parameters: ${parameters.join(', ')}`);
+        
+        // Find sinks in the handler
+        const sinks = this._findSinks(handlerNode);
+        if (sinks.length > 0) {
+            console.log(`Found ${sinks.length} potential sinks:`, sinks);
+        }
+    }
+
+    _findSinks(handlerNode) {
+        const sinks = [];
+
+        if (!handlerNode) return sinks;
+
+        this._traverseNode(handlerNode, (node) => {
+            if (node.type === 'CallExpression' && 
+                node.callee.type === 'Identifier' && 
+                node.callee.name === 'eval') {
+                sinks.push({
+                    type: 'eval',
+                    line: node.loc ? node.loc.start.line : 'unknown'
+                });
+            }
+        });
+
+        return sinks;
+    }
+
+    _traverseNode(node, visitor) {
+        if (!node || typeof node !== 'object') return;
+        
+        visitor(node);
+        
+        for (const key in node) {
+            const child = node[key];
+            if (Array.isArray(child)) {
+                child.forEach(item => this._traverseNode(item, visitor));
+            } else if (child && typeof child === 'object' && child.type) {
+                this._traverseNode(child, visitor);
+            }
+        }
     }
 
     _findExternalHandlerParams(functionName, fileAst) {
