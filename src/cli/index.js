@@ -5,7 +5,6 @@ const fs = require('fs');
 const { Scanner } = require('../core/scanner');
 const { FileProcessor } = require('../core/fileProcessor');
 const { FlowAnalyzer } = require('../core/flowAnalyzer');
-const { SecurityAuditor } = require('../core/securityAuditor');
 
 function printUsage() {
     console.log('Usage: node src/cli/index.js [options] <path>');
@@ -146,14 +145,11 @@ async function analyzeSingleFile(filePath) {
     try {
         const fileProcessor = new FileProcessor();
         const flowAnalyzer = new FlowAnalyzer();
-        const securityAuditor = new SecurityAuditor();
-        
         const fileInfo = await fileProcessor.processFile(absolutePath);
         const flowAnalysis = flowAnalyzer.analyzeFile(fileInfo);
-        const securityReport = securityAuditor.auditFlow(flowAnalysis, fileInfo.content);
         
-        printResults([fileInfo], [securityReport]);
-        writeReport([fileInfo], [securityReport]);
+        printResults([fileInfo], [flowAnalysis]);
+        writeReport([fileInfo], [flowAnalysis]);
         
     } catch (error) {
         console.error(`Error: ${error.message}`);
@@ -180,8 +176,6 @@ async function analyzeDirectory(dirPath) {
         const scanner = new Scanner();
         const fileProcessor = new FileProcessor();
         const flowAnalyzer = new FlowAnalyzer();
-        const securityAuditor = new SecurityAuditor();
-        
         const files = await scanner.scanDirectory(absolutePath);
         
         if (files.length === 0) {
@@ -190,19 +184,18 @@ async function analyzeDirectory(dirPath) {
         }
         
         const results = [];
-        const securityReports = [];
+        const flowAnalysisResults = [];
         
         for (const filePath of files) {
             const fileInfo = await fileProcessor.processFile(filePath);
             results.push(fileInfo);
             
             const flowAnalysis = flowAnalyzer.analyzeFile(fileInfo);
-            const securityReport = securityAuditor.auditFlow(flowAnalysis, fileInfo.content);
-            securityReports.push(securityReport);
+            flowAnalysisResults.push(flowAnalysis);
         }
         
-        printResults(results, securityReports);
-        writeReport(results, securityReports);
+        printResults(results, flowAnalysisResults);
+        writeReport(results, flowAnalysisResults);
         
     } catch (error) {
         console.error(`Error: ${error.message}`);

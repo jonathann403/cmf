@@ -74,10 +74,10 @@ CMF is built on a **modular, extensible architecture** designed for evolution an
 │  │     Scanner     │  │ FileProcessor   │  │ MessageExtractor│
 │  │  (Discovery)    │  │  (AST Gen)      │  │  (Pattern Rec) │ │
 │  └─────────────────┘  └─────────────────┘  └──────────────┘ │
-│  ┌─────────────────┐  ┌─────────────────┐                  │
-│  │  FlowAnalyzer   │  │ SecurityAuditor │                  │
-│  │ (Taint Track)   │  │  (Vuln Detect)  │                  │
-│  └─────────────────┘  └─────────────────┘                  │
+│  ┌─────────────────┐                                      │
+│  │  FlowAnalyzer   │                                      │
+│  │ (Taint Track)   │                                      │
+│  └─────────────────┘                                      │
 └─────────────────────────────────────────────────────────────┘
                                 │
 ┌─────────────────────────────────────────────────────────────┐
@@ -111,10 +111,6 @@ CMF is built on a **modular, extensible architecture** designed for evolution an
 - **Capabilities**: Function signature analysis, parameter detection, basic flow analysis
 - **Output**: Enhanced handler data with detailed function information
 
-#### **SecurityAuditor** (`src/core/securityAuditor.js`)
-- **Purpose**: Vulnerability detection and risk assessment
-- **Capabilities**: Sink detection, severity classification, exploit documentation
-- **Output**: Comprehensive security report with actionable findings
 
 ## Getting Started
 
