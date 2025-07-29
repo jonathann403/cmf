@@ -45,9 +45,9 @@ class FlowAnalyzer {
         if (handlerNode.type === 'FunctionExpression' || handlerNode.type === 'ArrowFunctionExpression') {
             parameters = handlerNode.params.map(param => param.name || param.type);
         } else if (handlerNode.type === 'Identifier') {
-            handlerType = 'ExternalFunction';
+            handlerType = handlerNode.name;
             const externalFunctionParams = this._findExternalHandlerParams(handlerNode.name, fileAst);
-            parameters = externalFunctionParams.length > 0 ? externalFunctionParams : [handlerNode.name];
+            parameters = externalFunctionParams.length > 0 ? externalFunctionParams : ['unknown'];
         }
 
         console.log(`Listener type: ${listener.type}, Handler: ${handlerType}, Parameters: ${parameters.join(', ')}`);
