@@ -81,15 +81,21 @@ class MessageExtractor {
                node.callee.object.name === 'window' &&
                node.callee.property.name === 'addEventListener' &&
                node.arguments.length >= 2 &&
-               node.arguments[0].type === 'StringLiteral' &&
-               node.arguments[0].value === 'message';
+               ((node.arguments[0].type === 'StringLiteral' &&
+               node.arguments[0].value === 'message') ||
+               (node.arguments[0].type === 'TemplateLiteral' &&
+               node.arguments[0].quasis.value.cooked === 'message'));
     }
 
     _isWindowOnMessage(node) {
         return node.left.type === 'MemberExpression' &&
                node.left.object.type === 'Identifier' &&
                node.left.object.name === 'window' &&
-               node.left.property.name === 'onmessage';
+               ((node.left.property.name === 'onmessage' &&
+                node.left.property.type == 'Identifier') || 
+                (node.left.property.value == 'onmessage' &&
+                node.left.property.type == 'Literal') || 
+                this._connectBinaryExpression(node.left.property));
     }
 
     _isWindowReferenceMessageListener(node) {
@@ -98,15 +104,21 @@ class MessageExtractor {
                this.windowReferences.has(node.callee.object.name) &&
                node.callee.property.name === 'addEventListener' &&
                node.arguments.length >= 2 &&
-               node.arguments[0].type === 'StringLiteral' &&
-               node.arguments[0].value === 'message';
+               ((node.arguments[0].type === 'StringLiteral' &&
+               node.arguments[0].value === 'message') ||
+               (node.arguments[0].type === 'TemplateLiteral' &&
+               node.arguments[0].quasis.value.cooked === 'message'));
     }
 
     _isWindowReferenceOnMessage(node) {
         return node.left.type === 'MemberExpression' &&
                node.left.object.type === 'Identifier' &&
                this.windowReferences.has(node.left.object.name) &&
-               node.left.property.name === 'onmessage';
+               ((node.left.property.name === 'onmessage' &&
+                node.left.property.type == 'Identifier') || 
+                (node.left.property.value == 'onmessage' &&
+                node.left.property.type == 'Literal') || 
+                this._connectBinaryExpression(node.left.property));
     }
 
     _getLineNumber(node) {
@@ -137,7 +149,22 @@ class MessageExtractor {
         }
     }
 
-    
+    _connectBinaryExpression(node) {
+        if (node.type === 'Literal' && typeof node.value === 'string') {
+            return node.value;
+        }
+        
+        if (node.type === 'BinaryExpression' && node.operator === '+') {
+            const leftValue = connectStrings(node.left);
+            const rightValue = connectStrings(node.right);
+            
+            if (leftValue !== null && rightValue !== null) {
+                return leftValue + rightValue;
+            }
+        }
+        
+        return null;
+    }
 }
 
 module.exports = { MessageExtractor };
